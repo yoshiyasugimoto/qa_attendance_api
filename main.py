@@ -79,10 +79,10 @@ def attendance():
         attended = session.query(User).filter(User.username == post_name).first()
         attended.attendance = True
         if attended.is_intern == True:
-            attended.count += 2
+            attended.count = 2
             session.commit()
         else:
-            attended.count += 3
+            attended.count = 3
             session.commit()
         return post_name + "さんの出勤を記録しました！"
     else:
@@ -97,7 +97,6 @@ def leave():
     if post_name in usernames:
         leaving_work = session.query(User).filter(User.username == post_name).first()
         leaving_work.attendance = False
-
         session.commit()
         return post_name + "さん,今日もお疲れ様でした!"
     else:
