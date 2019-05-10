@@ -3,9 +3,10 @@ from sqlalchemy import create_engine, Column, String, Integer, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask import request
+from sqlalchemy.pool import NullPool
 
 engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
-                       )
+                       , poolclass=NullPool)
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
 
@@ -25,13 +26,11 @@ class User(Base):
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
-session.close()
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False  # 日本語文字化け対策
 app.config["JSON_SORT_KEYS"] = False  # ソートをそのまま
 usernames = [name for name, in session.query(User.username)]
-
-
+session.close()
 @app.route('/')
 def index():
     return 'Index Page'
@@ -39,21 +38,22 @@ def index():
 
 @app.route('/question', methods=["POST"])
 def question():
+    session = Session()
     posted = request.form
     posted_name = posted['user_name']
     usernames = [name for name, in session.query(User.username)]
-    session = Session()
     if posted_name in usernames:
         filtered = session.query(User).filter(User.username == posted_name).first()
         if 0 < filtered.count < 5:
             filtered.count -= 1
             session.commit()
-            session.close()
+
             return "残りの質問回数は" + str(filtered.count) + "回です！"
         else:
             return '質問回数が不足してます！'
     else:
         return "出勤を記録してください！"
+    session.close()
 
 
 @app.route('/create', methods=['POST'])
@@ -62,7 +62,6 @@ def create():
     created = request.form
     created_name = created["user_name"]
     created_id = created["user_id"]
-
     usernames = [name for name, in session.query(User.username)]
     if not created_name in usernames:
         newname = User(id=created_id, username=created_name, count=2, attendance=False, is_intern=True)
@@ -94,14 +93,15 @@ def attendance():
         return post_name + "さんの出勤を記録しました！"
     else:
         return "メンバー登録してください！"
+    session.close()
 
 
 @app.route('/leaving_work', methods=['POST'])
 def leave():
+    session = Session()
     post_data = request.form
     post_name = post_data["user_name"]
     usernames = [name for name, in session.query(User.username)]
-    session =Session()
     if post_name in usernames:
         leaving_work = session.query(User).filter(User.username == post_name).first()
         leaving_work.attendance = False
@@ -110,6 +110,7 @@ def leave():
         return post_name + "さん,今日もお疲れ様でした!"
     else:
         return "出勤した記録がないですよ！"
+    session.close()
 
 
 if __name__ == "__main__":
