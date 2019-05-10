@@ -24,5 +24,4 @@ def add_question():
             session.commit()
             session.close()
 
-s
 add_question()
