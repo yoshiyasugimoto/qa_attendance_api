@@ -18,9 +18,11 @@ def add_question():
         if i.count < 4:
             i.count += 2
             session.commit()
+            session.close()
         else:
             i.count = 5
             session.commit()
+            session.close()
 
-
+s
 add_question()
