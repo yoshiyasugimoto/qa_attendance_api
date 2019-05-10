@@ -1,13 +1,8 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine, Column, String, Integer, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from flask import jsonify, request
-
-import time
-import schedule
-from werkzeug.datastructures import ImmutableMultiDict
+from flask import request
 
 engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
                        )
@@ -35,15 +30,7 @@ app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False  # 日本語文字化け対策
 app.config["JSON_SORT_KEYS"] = False  # ソートをそのまま
 
-# usernames = ["yoshiyasugimoto", "Satoko Ouchi", "Takashima Katsu", "Yuki Matsukuma", "Yusuke Hamaike", "杉本 義弥",
-#              "Kai Sato", "muraho", "saori murakami",]
-# import pdb;pdb.set_trace()
 usernames = [name for name, in session.query(User.username)]
-
-
-# import pdb;
-#
-# pdb.set_trace()
 
 
 @app.route('/')
@@ -55,11 +42,11 @@ def index():
 def question():
     posted = request.form
     posted_name = posted['user_name']
-    # import pdb;pdb.set_trace()
+
     if posted_name in usernames:
         filtered = session.query(User).filter(User.username == posted_name).first()
         if 0 < filtered.count < 5:
-            filtered.count -= 1  # update
+            filtered.count -= 1
             session.commit()
             return "残りの質問回数は" + str(filtered.count) + "回です！"
         else:
@@ -70,12 +57,11 @@ def question():
 
 @app.route('/create', methods=['POST'])
 def create():
-    # import pdb;pdb.set_trace()
     created = request.form
     created_name = created["user_name"]
     created_id = created["user_id"]
     if not created_name in usernames:
-        # import pdb;pdb.set_trace()
+
         newname = User(id=created_id, username=created_name, count=2, attendance=False, is_intern=True)
         session.add(newname)
         session.commit()
@@ -109,29 +95,12 @@ def leave():
     if post_name in usernames:
         leaving_work = session.query(User).filter(User.username == post_name).first()
         leaving_work.attendance = False
-        # leaving_work.count = 0
+
         session.commit()
         return post_name + "さん,今日もお疲れ様でした!"
     else:
         return "出勤した記録がないですよ！"
 
-
-# import pdb;
-#
-# pdb.set_trace()
-
-
-# def add_question():
-#     # attendance = session.query(User).filter(User.attendance).first()
-#
-#     # if True in attendance:
-#     filtered = session.query(User).all()
-#     filtered.count += 1
-#     session.commit()
-#     print("残りの質問回数" + filtered.count)
-#
-#
-# schedule.every(1 / 60).minutes.do(add_question)
 
 if __name__ == "__main__":
     app.run(debug=True)
