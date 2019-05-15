@@ -134,8 +134,8 @@ def leave():
         return "出勤した記録がないですよ！"
 
 
-@app.route("/morning")
-def morning():
+@app.route("/counter")
+def counter():
     add_question()
 
 
