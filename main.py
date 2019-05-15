@@ -31,6 +31,8 @@ app.config['JSON_AS_ASCII'] = False  # 日本語文字化け対策
 app.config["JSON_SORT_KEYS"] = False  # ソートをそのまま
 usernames = [name for name, in session.query(User.username)]
 session.close()
+
+
 @app.route('/')
 def index():
     return 'Index Page'
@@ -57,21 +59,29 @@ def question():
         return "出勤を記録してください！"
 
 
-
 @app.route('/create', methods=['POST'])
 def create():
     session = Session()
     created = request.form
     created_name = created["user_name"]
     created_id = created["user_id"]
+    created_emp = created["text"]
     usernames = [name for name, in session.query(User.username)]
     session.close()
-    if not created_name in usernames:
+    if created_emp == "emp":
+        newname = User(id=created_id, username=created_name, count=2, attendance=False, is_intern=False)
+        session.add(newname)
+        session.commit()
+        session.close()
+        return created_name + "さんを登録しました！"
+
+    elif not created_name in usernames:
         newname = User(id=created_id, username=created_name, count=2, attendance=False, is_intern=True)
         session.add(newname)
         session.commit()
         session.close()
         return created_name + "さんを登録しました！"
+
     else:
         return "もうメンバーですよ！"
 
@@ -99,7 +109,6 @@ def attendance():
         return "メンバー登録してください！"
 
 
-
 @app.route('/leaving_work', methods=['POST'])
 def leave():
     session = Session()
@@ -116,7 +125,6 @@ def leave():
         return post_name + "さん,今日もお疲れ様でした!"
     else:
         return "出勤した記録がないですよ！"
-
 
 
 if __name__ == "__main__":
