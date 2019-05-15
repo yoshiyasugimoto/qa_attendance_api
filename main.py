@@ -5,13 +5,11 @@ from sqlalchemy.orm import sessionmaker
 from flask import request
 from sqlalchemy.pool import NullPool
 
-# from counter_up import add_question
-
-engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
-                       , poolclass=NullPool)  # local用
-# engine = create_engine(
-#     'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
-#     , poolclass=NullPool)
+# engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
+#                        , poolclass=NullPool)  # local用
+engine = create_engine(
+    'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
+    , poolclass=NullPool)
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
 
