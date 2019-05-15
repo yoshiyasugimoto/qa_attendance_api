@@ -7,11 +7,11 @@ from sqlalchemy.pool import NullPool
 
 # from counter_up import add_question
 
-# engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
-#                        , poolclass=NullPool)#local用
-engine = create_engine(
-    'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
-    , poolclass=NullPool)
+engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
+                       , poolclass=NullPool)  # local用
+# engine = create_engine(
+#     'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
+#     , poolclass=NullPool)
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
 
@@ -144,11 +144,12 @@ def add_question():
         if i.count < 4:
             i.count += 2
             session.commit()
-            session.close()
         else:
             i.count = 5
             session.commit()
-            session.close()
+
+    session.close()
+    return "success"
 
 
 if __name__ == "__main__":
