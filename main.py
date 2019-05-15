@@ -4,7 +4,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask import request
 from sqlalchemy.pool import NullPool
-from counter_up import add_question
+
+# from counter_up import add_question
 
 # engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
 #                        , poolclass=NullPool)#local用
@@ -135,9 +136,22 @@ def leave():
 
 
 @app.route("/counter")
-def counter():
-    add_question()
+def add_question():
+    session = Session()
+    users = session.query(User).filter(User.is_intern == True, User.attendance).all()
 
+    for i in users:
+        if i.count < 4:
+            i.count += 2
+            session.commit()
+            session.close()
+        else:
+            i.count = 5
+            session.commit()
+            session.close()
+
+
+add_question()
 
 if __name__ == "__main__":
     app.run(debug=True)
