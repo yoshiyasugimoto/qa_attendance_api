@@ -5,6 +5,8 @@ from sqlalchemy.orm import sessionmaker
 from flask import request
 from sqlalchemy.pool import NullPool
 
+# engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
+#                        , poolclass=NullPool)#local用
 engine = create_engine(
     'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
     , poolclass=NullPool)
@@ -93,8 +95,11 @@ def attendance():
     post_data = request.form
     post_name = post_data["user_name"]
     usernames = [name for name, in session.query(User.username)]
+    attended = session.query(User).filter(User.username == post_name).first()
     session.close()
-    if post_name in usernames:
+    if attended.attendance == True:
+        return "出勤済みです"
+    elif post_name in usernames:
         attended = session.query(User).filter(User.username == post_name).first()
         attended.attendance = True
         if attended.is_intern == True:
