@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask import request
 from sqlalchemy.pool import NullPool
+from counter_up import add_question
 
 # engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
 #                        , poolclass=NullPool)#local用
@@ -131,6 +132,11 @@ def leave():
         return post_name + "さん,今日もお疲れ様でした!"
     else:
         return "出勤した記録がないですよ！"
+
+
+@app.route("/morning")
+def morning():
+    add_question()
 
 
 if __name__ == "__main__":
