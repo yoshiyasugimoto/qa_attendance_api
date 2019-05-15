@@ -4,7 +4,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask import request
 from sqlalchemy.pool import NullPool
+from counter_up import add_question
 
+# engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
+#                        , poolclass=NullPool)#local用
 engine = create_engine(
     'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
     , poolclass=NullPool)
@@ -93,8 +96,11 @@ def attendance():
     post_data = request.form
     post_name = post_data["user_name"]
     usernames = [name for name, in session.query(User.username)]
+    attended = session.query(User).filter(User.username == post_name).first()
     session.close()
-    if post_name in usernames:
+    if attended.attendance == True:
+        return "出勤済みです"
+    elif post_name in usernames:
         attended = session.query(User).filter(User.username == post_name).first()
         attended.attendance = True
         if attended.is_intern == True:
@@ -126,6 +132,11 @@ def leave():
         return post_name + "さん,今日もお疲れ様でした!"
     else:
         return "出勤した記録がないですよ！"
+
+
+@app.route("/counter")
+def counter():
+    add_question()
 
 
 if __name__ == "__main__":
