@@ -151,7 +151,5 @@ def add_question():
             session.close()
 
 
-add_question()
-
 if __name__ == "__main__":
     app.run(debug=True)
