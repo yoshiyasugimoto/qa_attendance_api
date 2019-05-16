@@ -45,7 +45,8 @@ def index():
 def question():
     session = Session()
     posted = request.form
-    posted_name = posted['user_name']
+    posted_name = posted['text']
+    posted_name = posted_name.strip("@")
     usernames = [name for name, in session.query(User.username)]
     session.close()
     if posted_name in usernames:
