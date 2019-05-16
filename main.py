@@ -1,15 +1,18 @@
+import datetime
+
+import pytz
 from flask import Flask
-from sqlalchemy import create_engine, Column, String, Integer, MetaData
+from sqlalchemy import create_engine, Column, String, Integer, MetaData, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask import request
 from sqlalchemy.pool import NullPool
 
-# engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
-#                        , poolclass=NullPool)  # local用
-engine = create_engine(
-    'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
-    , poolclass=NullPool)
+engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
+                       , poolclass=NullPool)  # local用
+# engine = create_engine(
+#     'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
+#     , poolclass=NullPool)
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
 
@@ -22,6 +25,8 @@ class User(Base):
     attendance = Column(Integer, nullable=False)
     is_intern = Column(Integer, nullable=True)
 
+    # attendance_time = Column(DateTime(), default=datetime.datetime.now(pytz.timezone('Asia/Tokyo')))
+    # finish_time = Column(DateTime(), default=datetime.datetime.now(pytz.timezone('Asia/Tokyo')))
     def __repr__(self):
         return '<User username={username} count={count}>'.format(username=self.username, count=self.count)
 
@@ -47,6 +52,8 @@ def question():
     posted = request.form
     posted_name = posted['text']
     posted_name = posted_name.strip("@")
+    if posted_name[-1:] in " ":
+        posted_name = posted_name.strip(" ")
     usernames = [name for name, in session.query(User.username)]
     session.close()
     if posted_name in usernames:
