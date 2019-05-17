@@ -2,7 +2,7 @@ import datetime
 
 import pytz
 from flask import Flask
-from sqlalchemy import create_engine, Column, String, Integer, MetaData, DateTime
+from sqlalchemy import create_engine, Column, String, Integer, MetaData, DateTime, desc
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask import request
@@ -25,10 +25,20 @@ class User(Base):
     attendance = Column(Integer, nullable=False)
     is_intern = Column(Integer, nullable=True)
 
-    # attendance_time = Column(DateTime(), default=datetime.datetime.now(pytz.timezone('Asia/Tokyo')))
-    # finish_time = Column(DateTime(), default=datetime.datetime.now(pytz.timezone('Asia/Tokyo')))
     def __repr__(self):
         return '<User username={username} count={count}>'.format(username=self.username, count=self.count)
+
+
+class Work_time(Base):
+    __tablename__ = 'Work_time'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(String(100), index=True)
+    username = Column(String(100), index=True)
+    attendance_time = Column(DateTime(), default=datetime.datetime.now(pytz.timezone('Asia/Tokyo')))
+    finish_time = Column(DateTime(), onupdate=datetime.datetime.now(pytz.timezone('Asia/Tokyo')))
+
+    def __repr__(self):
+        return '<User username={username} >'.format(username=self.username)
 
 
 Base.metadata.create_all(engine)
@@ -85,7 +95,6 @@ def create():
         session.commit()
         session.close()
         return created_name + "さんを登録しました！"
-
     elif not created_name in usernames:
         newname = User(id=created_id, username=created_name, count=2, attendance=False, is_intern=True)
         session.add(newname)
@@ -103,23 +112,30 @@ def attendance():
     post_data = request.form
     post_name = post_data["user_name"]
     usernames = [name for name, in session.query(User.username)]
+    attendance_id = post_data["user_id"]
+
     attended = session.query(User).filter(User.username == post_name).first()
-    session.close()
     if attended.attendance == True:
         return "出勤済みです"
     elif post_name in usernames:
         attended = session.query(User).filter(User.username == post_name).first()
         attended.attendance = True
+        attended_time = Work_time(user_id=attendance_id, username=post_name, attendance_time=datetime.datetime.now())
+        session.add(attended_time)
+        session.commit()
+
         if attended.is_intern == True:
             attended.count = 2
             session.commit()
             session.close()
+
         else:
             attended.count = 3
             session.commit()
             session.close()
         return post_name + "さんの出勤を記録しました！"
     else:
+        session.close()
         return "メンバー登録してください！"
 
 
@@ -129,15 +145,22 @@ def leave():
     post_data = request.form
     post_name = post_data["user_name"]
     usernames = [name for name, in session.query(User.username)]
-    session.close()
+
     if post_name in usernames:
         session = Session()
         leaving_work = session.query(User).filter(User.username == post_name).first()
+
         leaving_work.attendance = False
+        leaving_time_order = session.query(Work_time).filter(Work_time.username == post_name).order_by(
+            desc(Work_time.id)).first()
+
+        leaving_time_order.finish_time = datetime.datetime.now()
+
         session.commit()
         session.close()
         return post_name + "さん,今日もお疲れ様でした!"
     else:
+        session.close()
         return "出勤した記録がないですよ！"
 
 
