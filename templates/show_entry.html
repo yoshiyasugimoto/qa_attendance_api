@@ -16,45 +16,60 @@
     }
 
 
-
-
     </style>
 </head>
 <body>
-<table class="table table-striped">
+<table class="table table-striped ">
 
-    <captation>mlabの勤怠管理画面</captation>
+    <!--    <caption>mlabの勤怠管理画面</caption>-->
     <tr>
         <th>名前</th>
         <th>出勤記録</th>
         <th>退勤記録</th>
+        <th>就業時間</th>
+        <th>残業時間</th>
+        <th>総労働時間</th>
         <th>編集</th>
     </tr>
     <tr>
         <td>{% for name in all__name_string %}
-            <li>{{name}}</li>
+            <li class="list-group-item-action">{{name}}</li>
             {% endfor %}
         </td>
         <td>{% for time_att in times_att_string %}
-            <li>{{time_att}}</li>
+            <li class="list-group-item-action">{{time_att}}</li>
             {% endfor %}
         </td>
         <td>{% for time_fin in times_fin_string %}
-            <li>{{time_fin}}</li>
+            <li class="list-group-item-action">{{time_fin}}</li>
+            {% endfor %}
+        </td>
+        <td>{% for times_sum in times_sum_date %}
+            <li class="list-group-item-action">{{times_sum}}</li>
+            {% endfor %}
+        </td>
+        <td>{% for overtimes_sum in overtimes_sum_date %}
+            <li class="list-group-item-action">{{overtimes_sum}}</li>
+            {% endfor %}
+        </td>
+        <td>{% for alltimes_sum in alltimes_sum_date%}
+            <li class="list-group-item-action">{{alltimes_sum}}</li>
             {% endfor %}
         </td>
         <td>{% for i in id %}
             <a href="{{ url_for('edit', id=i)  }}">
-                <li>{{i}}
+                <li class="list-group-item-action">編集
             </a></li>
             {% endfor %}
         </td>
+
 
     </tr>
 </table>
 <form action="/filter" method="POST">
     <a href="{{ url_for('filter')  }}">
-        <input type="button" value="検索"></a>
+        <button type="button" class="btn btn-outline-primary btn-lg">検索画面へ</button>
+    </a>
 </form>
 
 </body>

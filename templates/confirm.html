@@ -19,12 +19,26 @@
 {% endwith %}
 
 {% block body %}
-<div class="mt-5">
+<div class="container mt-5">
     <form action="/filter" method="POST">
-        <label>ユーザー名:<input type="text" name="username" placeholder="検索したい人のslack名を入れてください"></label><br/>
-        <label>検索開始日:<input type="text" name="検索開始日" value="2019-05-22_20:00:00"></label><br/>
-        <label>検索終了日:<input type="text" name="検索終了日" value="2019-06-24_21:00:00"></label><br/>
-        <label><input type="submit" value="検索"></label>
+        <div class="form-group mx-auto" style="width: 200px;">
+            <label>ユーザー名:<input class="form-control form-inline" type="text" name="username"
+                                placeholder="検索したい人のslack名を入れてください"></label><br/>
+        </div>
+        <div class="form-group mx-auto" style="width: 200px;">
+        <label>検索開始日:<input class="form-control form-inline" type="text" name="検索開始日"
+                            value="2019-05-22_20:00:00"></label><br/>
+        </div>
+        <div class="form-group mx-auto" style="width: 200px;">
+        <label>検索終了日:<input class="form-control form-inline" type="text" name="検索終了日"
+                            value="2019-06-01_20:00:00"></label><br/>
+        </div>
+        <div class="mx-auto" style="width: 200px;">
+        <label>
+            <button class="btn btn-lg btn-primary" type="submit">検索</button>
+        </label>
+        </div>
+
     </form>
 </div>
 {% endblock %}
