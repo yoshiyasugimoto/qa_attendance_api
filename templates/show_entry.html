@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>m-lab勤怠記録</title>
+    <title>m-lab勤怠全件表示</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <style>
@@ -21,7 +21,7 @@
 <body>
 <table class="table table-striped ">
 
-    <!--    <caption>mlabの勤怠管理画面</caption>-->
+
     <tr>
         <th>名前</th>
         <th>出勤記録</th>
@@ -66,7 +66,7 @@
 
     </tr>
 </table>
-<form action="/filter" method="POST">
+<form class="form-inline" action="/filter" method="POST">
     <a href="{{ url_for('filter')  }}">
         <button type="button" class="btn btn-outline-primary btn-lg">検索画面へ</button>
     </a>

@@ -22,12 +22,25 @@
 
 
 
+
+
+
     </style>
 </head>
 <body>
+{% block body %}
+<ul class="nav justify-content-center">
+    <li class="nav-item">
+        <a class="nav-link active" href="/show_entry">全件表示</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/filter">検索</a>
+    </li>
+</ul>
 <table class="table table-striped">
     <form action="{{ url_for('edit_update', id=ids) }}" method="POST">
-        <!--        <caption>mlabの勤怠編集画面</caption>-->
+
+
         <tr>
             <th>名前</th>
             <th>出勤記録</th>
@@ -48,10 +61,8 @@
                 {% endfor %}
             </td>
         </tr>
-        <p>
-            <button class="btn btn-lg btn-primary" type="submit">更新</button>
-        </p>
 
+        <button class="btn btn-lg btn-primary " type="submit">更新</button>
     </form>
 </table>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
@@ -63,5 +74,6 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
+{% endblock %}
 </body>
 </html>

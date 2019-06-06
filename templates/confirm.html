@@ -19,6 +19,7 @@
 {% endwith %}
 
 {% block body %}
+
 <div class="container mt-5">
     <form action="/filter" method="POST">
         <div class="form-group mx-auto" style="width: 200px;">
@@ -41,6 +42,11 @@
 
     </form>
 </div>
+<ul class="nav justify-content-center">
+  <li class="nav-item">
+    <a class="nav-link active" href="/show_entry">全件表示</a>
+  </li>
+</ul>
 {% endblock %}
 </body>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
