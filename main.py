@@ -4,22 +4,25 @@ import os
 from flask import session as cook
 import pytz
 from flask import Flask, render_template, flash
-from sqlalchemy import create_engine, Column, String, Integer, MetaData, DateTime, desc, and_
+from sqlalchemy import create_engine, Column, String, Integer, MetaData, DateTime, desc
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask import request
 from sqlalchemy.pool import NullPool
 
-engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
-                       , poolclass=NullPool)  # local用
-# engine = create_engine(
-#     'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
-#     , poolclass=NullPool)
+# engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
+#                        , poolclass=NullPool)  # local用
+engine = create_engine(
+    'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
+    , poolclass=NullPool)
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
 
 app = Flask(__name__)
 app.secret_key = "hoge"
+
+
+# app.secret_key = os.urandom(12)
 
 
 class User(Base):
@@ -69,17 +72,40 @@ def show_entries():
         times_att = [timer for timer, in session.query(Work_time.attendance_time).order_by(desc(Work_time.id))]
         times_fin = [timer for timer, in session.query(Work_time.finish_time).order_by(desc(Work_time.id))]
         times_att_string = [i.strftime('%Y-%m-%d_%H:%M:%S') for i in times_att]
-
+        times_sum_date = []
+        overtimes_sum_date = []
+        alltimes_sum_date = []
         times_fin_string = []
-        for num in times_fin:
+        for num, i in zip(times_fin, times_att):
+
             try:
                 times_fin_string.append(num.strftime('%Y-%m-%d_%H:%M:%S'))
-            except AttributeError:
-                print(ValueError)
+                d = num - i
+                if d >= datetime.timedelta(hours=7):
+                    if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
+                        times_sum_date.append(datetime.time(hour=8, minute=0, second=0))
+                        overtimes_sum_date.append(d - datetime.timedelta(hours=9))
+                        alltimes_sum_date.append(d - datetime.timedelta(hours=1))
+
+                elif datetime.timedelta(hours=6) <= d < datetime.timedelta(hours=7):
+                    times_sum_date.append(datetime.time(hour=6, minute=0, second=0))
+                    alltimes_sum_date.append(datetime.time(hour=6, minute=0, second=0))
+                    overtimes_sum_date.append("残業なし")
+                else:
+                    times_sum_date.append(d)
+                    alltimes_sum_date.append(d)
+                    overtimes_sum_date.append("残業なし")
+
+            except:
                 times_fin_string.append("打刻されていません")
+                times_sum_date.append("打刻されていません")
+                overtimes_sum_date.append("打刻されていません")
+                alltimes_sum_date.append("打刻されていません")
         return render_template("show_entry.html", id=id_data, all__name_string=all__name_string,
                                times_att_string=times_att_string,
-                               times_fin_string=times_fin_string, )
+                               times_fin_string=times_fin_string, times_sum_date=times_sum_date,
+                               overtimes_sum_date=overtimes_sum_date, alltimes_sum_date=alltimes_sum_date,
+                               )
 
 
 @app.route('/question', methods=["POST"])
@@ -139,7 +165,6 @@ def attendance():
     post_name = post_data["user_name"]
     usernames = [name for name, in session.query(User.username)]
     attendance_id = post_data["user_id"]
-
     attended = session.query(User).filter(User.username == post_name).first()
     if attended.attendance == True:
         return "出勤済みです"
@@ -220,13 +245,13 @@ def filter():
             usernames = [name for name, in session.query(Work_time.username)]
             data_att = session.query(Work_time.attendance_time).order_by(desc(Work_time.id)).all()
             times_att = [timer for timer, in data_att]
-
             try:
                 start_date_datetime = datetime.datetime.strptime(start_date, "%Y-%m-%d_%H:%M:%S")
                 end_date_datetime = datetime.datetime.strptime(end_date, "%Y-%m-%d_%H:%M:%S")
-
                 for dates_date in times_att:
-                    if start_date_datetime <= dates_date <= end_date_datetime and postname in usernames:
+                    if not start_date_datetime <= dates_date <= end_date_datetime:
+                        continue
+                    elif start_date_datetime <= dates_date <= end_date_datetime and postname in usernames:
 
                         result_att = session.query(Work_time.attendance_time).filter(
                             Work_time.username == postname).order_by(
@@ -241,17 +266,20 @@ def filter():
                             Work_time.username == postname).order_by(
                             desc(Work_time.id)).all()
                         times_fin = [timer for timer, in result_fin]
-                        times_fin_string = []
+                        id = session.query(Work_time.id).filter(
+                            Work_time.username == postname).order_by(
+                            desc(Work_time.id)).all()
+                        id_date = [i for i, in id]
                         times_sum_date = []
                         overtimes_sum_date = []
                         alltimes_sum_date = []
-
+                        times_fin_string = []
                         for num, i in zip(times_fin, times_att):
 
                             try:
                                 times_fin_string.append(num.strftime('%Y-%m-%d_%H:%M:%S'))
                                 d = num - i
-                                if num - i >= datetime.timedelta(hours=7):
+                                if d >= datetime.timedelta(hours=7):
                                     if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
                                         times_sum_date.append(datetime.time(hour=8, minute=0, second=0))
                                         overtimes_sum_date.append(d - datetime.timedelta(hours=9))
@@ -267,8 +295,6 @@ def filter():
                                     overtimes_sum_date.append("残業なし")
 
                             except:
-                                import pdb;
-                                pdb.set_trace()
                                 times_fin_string.append("打刻されていません")
                                 times_sum_date.append("打刻されていません")
                                 overtimes_sum_date.append("打刻されていません")
@@ -280,9 +306,10 @@ def filter():
                                                times_att_string=times_att_string,
                                                times_fin_string=times_fin_string, times_sum_date=times_sum_date,
                                                overtimes_sum_date=overtimes_sum_date,
-                                               alltimes_sum_date=alltimes_sum_date)
+                                               alltimes_sum_date=alltimes_sum_date, id=id_date)
+
                     elif postname == '':
-                        # import pdb;pdb.set_trace()
+
                         date_name = session.query(Work_time.username).order_by(desc(Work_time.id)).filter(
                             Work_time.attendance_time.between(start_date_datetime, end_date_datetime)).all()
                         date_name_name = [name for name, in date_name]
@@ -295,6 +322,9 @@ def filter():
                             Work_time.attendance_time.between(start_date_datetime, end_date_datetime)).order_by(
                             desc(Work_time.id)).all()
                         times_fin = [timer for timer, in time_and_fin]
+                        id = session.query(Work_time.id).order_by(desc(Work_time.id)).filter(
+                            Work_time.attendance_time.between(start_date_datetime, end_date_datetime)).all()
+                        id_date = [i for i, in id]
                         times_fin_string = []
                         times_sum_date = []
                         overtimes_sum_date = []
@@ -330,24 +360,30 @@ def filter():
                                                times_att_string=times_att_string,
                                                times_fin_string=times_fin_string, times_sum_date=times_sum_date,
                                                overtimes_sum_date=overtimes_sum_date,
-                                               alltimes_sum_date=alltimes_sum_date)
-
-
+                                               alltimes_sum_date=alltimes_sum_date, id=id_date)
                 else:
+                    # import pdb;pdb.set_trace()
                     flash("検索条件に当てはまるデータがありません")
                     return render_template("confirm.html")
             except:
-
-                if postname in usernames:
+                if postname in usernames and start_date == '':
                     result_att = session.query(Work_time.attendance_time).filter(
                         Work_time.username == postname).order_by(
                         desc(Work_time.id)).all()
                     times_att = [timer for timer, in result_att]
+                    result_name = session.query(Work_time.username).filter(
+                        Work_time.username == postname).order_by(
+                        desc(Work_time.id)).all()
+                    result_name_name = [name for name, in result_name]
                     times_att_string = [i.strftime('%Y-%m-%d_%H:%M:%S') for i in times_att]
                     result_fin = session.query(Work_time.finish_time).filter(
                         Work_time.username == postname).order_by(
                         desc(Work_time.id)).all()
                     times_fin = [timer for timer, in result_fin]
+                    id = session.query(Work_time.id).filter(
+                        Work_time.username == postname).order_by(
+                        desc(Work_time.id)).all()
+                    id_date = [i for i, in id]
                     times_fin_string = []
                     times_sum_date = []
                     overtimes_sum_date = []
@@ -380,12 +416,16 @@ def filter():
                             alltimes_sum_date.append("打刻されていません")
 
                     session.close()
-                    return render_template("result.html", usernames=usernames, times_att_string=times_att_string,
+                    return render_template("result.html", usernames=result_name_name, times_att_string=times_att_string,
                                            times_fin_string=times_fin_string, times_sum_date=times_sum_date,
                                            overtimes_sum_date=overtimes_sum_date,
-                                           alltimes_sum_date=alltimes_sum_date)
-        else:
-            flash("検索条件に当てはまるデータがありません")
+                                           alltimes_sum_date=alltimes_sum_date, id=id_date)
+                else:
+                    flash("検索条件に当てはまるデータがありません")
+                    return render_template("confirm.html")
+
+        # else:
+        # flash("検索条件に当てはまるデータがありません")
         return render_template("confirm.html")
 
 
@@ -402,6 +442,8 @@ def login():
 
 @app.route("/edit/<int:id>", methods=['GET'])
 def edit(id):
+    if not cook.get('logged_in'):
+        return render_template('login.html')
     ids = session.query(Work_time.id).filter(Work_time.id == id).all()
     ids_date = [ids_dates for ids_dates, in ids]
     all_name = session.query(Work_time.username).order_by(desc(Work_time.id)).filter(Work_time.id == id).all()
@@ -472,4 +514,5 @@ def edit_update(id):
 
 if __name__ == "__main__":
     app.secret_key = os.urandom(12)
+    app.config['SESSION_TYPE'] = 'filesystem'
     app.run(debug=True)

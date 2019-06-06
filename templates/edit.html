@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <title>編集画面</title>
@@ -21,12 +21,13 @@
 
 
 
+
     </style>
 </head>
 <body>
 <table class="table table-striped">
     <form action="{{ url_for('edit_update', id=ids) }}" method="POST">
-        <captation>mlabの勤怠編集画面</captation>
+        <!--        <caption>mlabの勤怠編集画面</caption>-->
         <tr>
             <th>名前</th>
             <th>出勤記録</th>
@@ -47,7 +48,10 @@
                 {% endfor %}
             </td>
         </tr>
-        <p><input type="submit" value="更新"/></p>
+        <p>
+            <button class="btn btn-lg btn-primary" type="submit">更新</button>
+        </p>
+
     </form>
 </table>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
