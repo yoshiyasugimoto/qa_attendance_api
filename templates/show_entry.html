@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <style>
-
     body { background-color: white; }
     h1,h2,h3 { font-size: 18px; }
     li { list-style: none;}
@@ -19,58 +18,41 @@
     </style>
 </head>
 <body>
-<table class="table table-striped ">
-
-
-    <tr>
-        <th>名前</th>
-        <th>出勤記録</th>
-        <th>退勤記録</th>
-        <th>就業時間</th>
-        <th>残業時間</th>
-        <th>総労働時間</th>
-        <th>編集</th>
-    </tr>
-    <tr>
-        <td>{% for name in all__name_string %}
-            <li class="list-group-item-action">{{name}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for time_att in times_att_string %}
-            <li class="list-group-item-action">{{time_att}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for time_fin in times_fin_string %}
-            <li class="list-group-item-action">{{time_fin}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for times_sum in times_sum_date %}
-            <li class="list-group-item-action">{{times_sum}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for overtimes_sum in overtimes_sum_date %}
-            <li class="list-group-item-action">{{overtimes_sum}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for alltimes_sum in alltimes_sum_date%}
-            <li class="list-group-item-action">{{alltimes_sum}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for i in id %}
-            <a href="{{ url_for('edit', id=i)  }}">
-                <li class="list-group-item-action">編集
-            </a></li>
-            {% endfor %}
-        </td>
-
-
-    </tr>
-</table>
 <form class="form-inline" action="/filter" method="POST">
     <a href="{{ url_for('filter')  }}">
         <button type="button" class="btn btn-outline-primary btn-lg">検索画面へ</button>
     </a>
 </form>
+
+<table class="table table-border table-striped ">
+
+    <thead class="">
+
+    <tr>
+        <th scope="col">名前</th>
+        <th scope="col">出勤記録</th>
+        <th scope="col">退勤記録</th>
+        <th scope="col">就業時間</th>
+        <th scope="col">残業時間</th>
+        <th scope="col">総労働時間</th>
+        <th scope="col">編集</th>
+    </tr>
+    </thead>
+
+    {% for i,name,time_att,time_fin,times_sum,overtimes_sum,alltimes_sum in date %}
+    <tr>
+        <td>{{name}}</td>
+        <td>{{time_att}}</td>
+        <td>{{time_fin}}</td>
+        <td>{{times_sum}}</td>
+        <td>{{overtimes_sum}}</td>
+        <td>{{alltimes_sum}}</td>
+        <td><a href="{{ url_for('edit', id=i)  }}">
+            編集</a></td>
+    </tr>
+    {% endfor %}
+
+</table>
 
 </body>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
