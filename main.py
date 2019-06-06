@@ -19,7 +19,6 @@ meta = MetaData(engine, reflect=True)
 Base = declarative_base()
 
 app = Flask(__name__)
-app.secret_key = "hoge"
 
 
 # app.secret_key = os.urandom(12)
@@ -515,4 +514,5 @@ def edit_update(id):
 if __name__ == "__main__":
     app.secret_key = os.urandom(12)
     app.config['SESSION_TYPE'] = 'filesystem'
+
     app.run(debug=True)
