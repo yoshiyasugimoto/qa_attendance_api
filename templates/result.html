@@ -33,6 +33,9 @@
         <th>残業時間</th>
         <th>総労働時間</th>
         <th>編集</th>
+        {% if sum_alltimes_sum %}
+        <th>合計総労働時間</th>
+        {% endif %}
     </tr>
     <tr>
         <td>{% for name in usernames %}
@@ -64,6 +67,9 @@
                 <li class="list-group-item-action">編集
             </a></li>
             {% endfor %}
+        </td>
+        <td>
+            {{sum_alltimes_sum}}
         </td>
 
 

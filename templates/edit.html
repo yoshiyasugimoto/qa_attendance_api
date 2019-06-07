@@ -16,15 +16,6 @@
     }
 
 
-
-
-
-
-
-
-
-
-
     </style>
 </head>
 <body>
@@ -37,8 +28,9 @@
         <a class="nav-link" href="/filter">検索</a>
     </li>
 </ul>
-<table class="table table-striped">
-    <form action="{{ url_for('edit_update', id=ids) }}" method="POST">
+
+<form action="{{ url_for('edit_update', id=ids) }}" method="POST">
+    <table class="table table-striped">
 
 
         <tr>
@@ -61,10 +53,10 @@
                 {% endfor %}
             </td>
         </tr>
+    </table>
+    <button class="button btn  float-right btn-primary " type="submit">更新</button>
+</form>
 
-        <button class="btn btn-lg btn-primary " type="submit">更新</button>
-    </form>
-</table>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
         crossorigin="anonymous"></script>

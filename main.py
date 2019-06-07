@@ -10,11 +10,12 @@ from sqlalchemy.orm import sessionmaker
 from flask import request
 from sqlalchemy.pool import NullPool
 
-engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
-                       , poolclass=NullPool)  # local用
-# engine = create_engine(
-#     'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
-#     , poolclass=NullPool)
+# engine = create_engine('mysql+pymysql://root:@localhost/question?charset=utf8'
+#                        , poolclass=NullPool)  # local用
+engine = create_engine(
+    'mysql+pymysql://root:task-wktk@/question?unix_socket=/cloudsql/mlab-apps:asia-northeast1:mlab-apps-sql'
+    , poolclass=NullPool)
+
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
 
@@ -67,12 +68,13 @@ def show_entries():
         all__name_string = [name for name, in all_name]
         times_att = [timer for timer, in session.query(Work_time.attendance_time).order_by(desc(Work_time.id))]
         times_fin = [timer for timer, in session.query(Work_time.finish_time).order_by(desc(Work_time.id))]
+
         times_att_asia = []
         for att in times_att:
-            times_att_asia.append(pytz.timezone("Asia/Tokyo").localize(att))
-        # import pdb;pdb.set_trace()
+            timedel = pytz.timezone("UTC").localize(att) - pytz.timezone("Asia/Tokyo").localize(att)
+            times_att_asia.append((att + timedel).replace(tzinfo=None))
 
-        times_att_string = [i.strftime('%Y-%m-%d_%H:%M:%S') for i in times_att_asia]
+        times_att_string = [i.strftime('%Y-%m-%d_%H:%M:%S%z') for i in times_att_asia]
         times_sum_date = []
         overtimes_sum_date = []
         alltimes_sum_date = []
@@ -80,8 +82,9 @@ def show_entries():
         for num, i in zip(times_fin, times_att):
 
             try:
-                times_fin_asia = pytz.timezone("Asia/Tokyo").localize(num)
-                times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S'))
+                timedel = (pytz.timezone("UTC").localize(num) - pytz.timezone("Asia/Tokyo").localize(num))
+                times_fin_asia = (num + timedel).replace(tzinfo=None)
+                times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S%z'))
                 d = num - i
                 if d >= datetime.timedelta(hours=7):
                     if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
@@ -103,6 +106,7 @@ def show_entries():
                 times_sum_date.append("打刻されていません")
                 overtimes_sum_date.append("打刻されていません")
                 alltimes_sum_date.append("打刻されていません")
+
         return render_template("show_entry.html", id=id_data, all__name_string=all__name_string,
                                times_att_string=times_att_string,
                                times_fin_string=times_fin_string, times_sum_date=times_sum_date,
@@ -248,8 +252,17 @@ def filter():
             data_att = session.query(Work_time.attendance_time).order_by(desc(Work_time.id)).all()
             times_att = [timer for timer, in data_att]
             try:
-                start_date_datetime = datetime.datetime.strptime(start_date, "%Y-%m-%d_%H:%M:%S")
-                end_date_datetime = datetime.datetime.strptime(end_date, "%Y-%m-%d_%H:%M:%S")
+                start_date_datetimes = datetime.datetime.strptime(start_date, "%Y-%m-%d_%H:%M:%S")
+                timedel_start = (
+                    (pytz.timezone("Asia/Tokyo").localize(start_date_datetimes) - pytz.timezone("UTC").localize(
+                        start_date_datetimes)))
+                start_date_datetime = start_date_datetimes + timedel_start
+
+                end_date_datetimes = datetime.datetime.strptime(end_date, "%Y-%m-%d_%H:%M:%S")
+                timedel_end = (
+                    (pytz.timezone("Asia/Tokyo").localize(end_date_datetimes) - pytz.timezone("UTC").localize(
+                        end_date_datetimes)))
+                end_date_datetime = end_date_datetimes + timedel_end
                 for dates_date in times_att:
                     if not start_date_datetime <= dates_date <= end_date_datetime:
                         continue
@@ -266,7 +279,8 @@ def filter():
 
                         times_att_asia = []
                         for att in times_att:
-                            times_att_asia.append(pytz.timezone("Asia/Tokyo").localize(att))
+                            timedel = (pytz.timezone("UTC").localize(att) - pytz.timezone("Asia/Tokyo").localize(att))
+                            times_att_asia.append((att + timedel).replace(tzinfo=None))
 
                         times_att_string = [i.strftime('%Y-%m-%d_%H:%M:%S') for i in times_att_asia]
                         result_fin = session.query(Work_time.finish_time).filter(
@@ -284,40 +298,44 @@ def filter():
                         for num, i in zip(times_fin, times_att):
 
                             try:
-                                times_fin_asia = pytz.timezone("Asia/Tokyo").localize(num)
-                                times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S'))
+                                timedel = (pytz.timezone("UTC").localize(num) - pytz.timezone("Asia/Tokyo").localize(
+                                    num))
+                                times_fin_asia = (num + timedel).replace(tzinfo=None)
+                                times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S%z'))
                                 d = num - i
                                 if d >= datetime.timedelta(hours=7):
                                     if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
-                                        times_sum_date.append(datetime.time(hour=8, minute=0, second=0))
+                                        times_sum_date.append(datetime.timedelta(hours=8))
                                         overtimes_sum_date.append(d - datetime.timedelta(hours=9))
                                         alltimes_sum_date.append(d - datetime.timedelta(hours=1))
-
                                 elif datetime.timedelta(hours=6) <= d < datetime.timedelta(hours=7):
-                                    times_sum_date.append(datetime.time(hour=6, minute=0, second=0))
-                                    alltimes_sum_date.append(datetime.time(hour=6, minute=0, second=0))
+                                    times_sum_date.append(datetime.timedelta(hours=6))
+                                    alltimes_sum_date.append(datetime.timedelta(hours=6))
                                     overtimes_sum_date.append("残業なし")
                                 else:
                                     times_sum_date.append(d)
                                     alltimes_sum_date.append(d)
                                     overtimes_sum_date.append("残業なし")
-
                             except:
                                 times_fin_string.append("打刻されていません")
                                 times_sum_date.append("打刻されていません")
                                 overtimes_sum_date.append("打刻されていません")
                                 alltimes_sum_date.append("打刻されていません")
 
+                        sum_alltimes_sum = datetime.timedelta(0, 0)
+                        for i in alltimes_sum_date:
+                            sum_alltimes_sum += i
                         session.close()
 
                         return render_template("result.html", usernames=result_name_name,
                                                times_att_string=times_att_string,
                                                times_fin_string=times_fin_string, times_sum_date=times_sum_date,
                                                overtimes_sum_date=overtimes_sum_date,
-                                               alltimes_sum_date=alltimes_sum_date, id=id_date)
+                                               alltimes_sum_date=alltimes_sum_date, id=id_date,
+                                               sum_alltimes_sum=sum_alltimes_sum
+                                               )
 
                     elif postname == '':
-
                         date_name = session.query(Work_time.username).order_by(desc(Work_time.id)).filter(
                             Work_time.attendance_time.between(start_date_datetime, end_date_datetime)).all()
                         date_name_name = [name for name, in date_name]
@@ -327,7 +345,8 @@ def filter():
 
                         times_att_asia = []
                         for att in date_att_att:
-                            times_att_asia.append(pytz.timezone("Asia/Tokyo").localize(att))
+                            timedel = (pytz.timezone("UTC").localize(att) - pytz.timezone("Asia/Tokyo").localize(att))
+                            times_att_asia.append((att + timedel).replace(tzinfo=None))
 
                         times_att_string = [i.strftime('%Y-%m-%d_%H:%M:%S') for i in times_att_asia]
 
@@ -345,18 +364,20 @@ def filter():
 
                         for num, i in zip(times_fin, date_att_att):
                             try:
-                                times_fin_asia = pytz.timezone("Asia/Tokyo").localize(num)
-                                times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S'))
+                                timedel = (pytz.timezone("UTC").localize(num) - pytz.timezone("Asia/Tokyo").localize(
+                                    num))
+                                times_fin_asia = (num + timedel).replace(tzinfo=None)
+                                times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S%z'))
                                 d = num - i
                                 if num - i >= datetime.timedelta(hours=7):
                                     if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
-                                        times_sum_date.append(datetime.time(hour=8, minute=0, second=0))
+                                        times_sum_date.append(datetime.timedelta(hours=8))
                                         overtimes_sum_date.append(d - datetime.timedelta(hours=9))
                                         alltimes_sum_date.append(d - datetime.timedelta(hours=1))
 
                                 elif datetime.timedelta(hours=6) <= num - i < datetime.timedelta(hours=7):
-                                    times_sum_date.append(datetime.time(hour=6, minute=0, second=0))
-                                    alltimes_sum_date.append(datetime.time(hour=6, minute=0, second=0))
+                                    times_sum_date.append(datetime.timedelta(hours=6))
+                                    alltimes_sum_date.append(datetime.timedelta(hours=6))
                                     overtimes_sum_date.append("残業なし")
                                 else:
                                     times_sum_date.append((num - i))
@@ -376,7 +397,6 @@ def filter():
                                                overtimes_sum_date=overtimes_sum_date,
                                                alltimes_sum_date=alltimes_sum_date, id=id_date)
                 else:
-                    # import pdb;pdb.set_trace()
                     flash("検索条件に当てはまるデータがありません")
                     return render_template("confirm.html")
             except:
@@ -392,7 +412,8 @@ def filter():
 
                     times_att_asia = []
                     for att in times_att:
-                        times_att_asia.append(pytz.timezone("Asia/Tokyo").localize(att))
+                        timedel = (pytz.timezone("UTC").localize(att) - pytz.timezone("Asia/Tokyo").localize(att))
+                        times_att_asia.append((att + timedel).replace(tzinfo=None))
 
                     times_att_string = [i.strftime('%Y-%m-%d_%H:%M:%S') for i in times_att_asia]
                     result_fin = session.query(Work_time.finish_time).filter(
@@ -410,18 +431,20 @@ def filter():
 
                     for num, i in zip(times_fin, times_att):
                         try:
-                            times_fin_asia = pytz.timezone("Asia/Tokyo").localize(num)
-                            times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S'))
+                            timedel = (pytz.timezone("UTC").localize(num) - pytz.timezone("Asia/Tokyo").localize(
+                                num))
+                            times_fin_asia = (num + timedel).replace(tzinfo=None)
+                            times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S%z'))
                             d = num - i
                             if num - i >= datetime.timedelta(hours=7):
                                 if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
-                                    times_sum_date.append(datetime.time(hour=8, minute=0, second=0))
+                                    times_sum_date.append(datetime.timedelta(hours=8))
                                     overtimes_sum_date.append(d - datetime.timedelta(hours=9))
                                     alltimes_sum_date.append(d - datetime.timedelta(hours=1))
 
                             elif datetime.timedelta(hours=6) <= num - i < datetime.timedelta(hours=7):
-                                times_sum_date.append(datetime.time(hour=6, minute=0, second=0))
-                                alltimes_sum_date.append(datetime.time(hour=6, minute=0, second=0))
+                                times_sum_date.append(datetime.timedelta(hours=6))
+                                alltimes_sum_date.append(datetime.timedelta(hours=6))
                                 overtimes_sum_date.append("残業なし")
                             else:
                                 times_sum_date.append((num - i))
@@ -473,14 +496,17 @@ def edit(id):
 
     times_att_asia = []
     for att in times_att:
-        times_att_asia.append(pytz.timezone("Asia/Tokyo").localize(att))
+        timedel = (pytz.timezone("UTC").localize(att) - pytz.timezone("Asia/Tokyo").localize(att))
+        times_att_asia.append((att + timedel).replace(tzinfo=None))
 
     times_att_string = [i.strftime('%Y-%m-%d_%H:%M:%S') for i in times_att_asia]
     times_fin_string = []
     for num in times_fin:
         try:
-            times_fin_asia = pytz.timezone("Asia/Tokyo").localize(num)
-            times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S'))
+            timedel = (pytz.timezone("UTC").localize(num) - pytz.timezone("Asia/Tokyo").localize(
+                num))
+            times_fin_asia = (num + timedel).replace(tzinfo=None)
+            times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S%z'))
         except AttributeError:
             print(ValueError)
             times_fin_string.append("打刻されていません")
@@ -500,23 +526,22 @@ def edit_update(id):
     fin_date_time = updated["time_fin_time"]
     att_date_time_sql = datetime.datetime.strptime(att_date_time, '%Y-%m-%d_%H:%M:%S')
     user_id.username = updated["username"]
-    times_att_asia = pytz.timezone("Asia/Tokyo").localize(user_id.attendance_time)
+    user_id.attendance_time = att_date_time_sql
     times_sum_date = []
     overtimes_sum_date = []
     alltimes_sum_date = []
     try:
         fin_date_time_sql = datetime.datetime.strptime(fin_date_time, '%Y-%m-%d_%H:%M:%S')
-        times_fin_asia = pytz.timezone("Asia/Tokyo").localize(fin_date_time_sql)
-        fin_date_time_sql_string = times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S')
+        fin_date_time_sql_string = fin_date_time_sql.strftime('%Y-%m-%d_%H:%M:%S')
         d = fin_date_time_sql - att_date_time_sql
         if d >= datetime.timedelta(hours=7):
             if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
-                times_sum_date.append(datetime.time(hour=8, minute=0, second=0))
+                times_sum_date.append(datetime.timedelta(hours=8))
                 overtimes_sum_date.append(d - datetime.timedelta(hours=9))
                 alltimes_sum_date.append(d - datetime.timedelta(hours=1))
         elif datetime.timedelta(hours=6) <= d < datetime.timedelta(hours=7):
-            times_sum_date.append(datetime.time(hour=6, minute=0, second=0))
-            alltimes_sum_date.append(datetime.time(hour=6, minute=0, second=0))
+            times_sum_date.append(datetime.timedelta(hours=6))
+            alltimes_sum_date.append(datetime.timedelta(hours=6))
             overtimes_sum_date.append("残業なし")
         else:
             times_sum_date.append(d)
@@ -529,11 +554,10 @@ def edit_update(id):
         overtimes_sum_date.append("打刻されていません")
         alltimes_sum_date.append("打刻されていません")
     user_id.finish_time = fin_date_time_sql
-    att_date_time_sql_string = times_att_asia.strftime('%Y-%m-%d_%H:%M:%S')
     session.commit()
     session.close()
 
-    return render_template("result.html", usernames=[updated["username"]], times_att_string=[att_date_time_sql_string],
+    return render_template("result.html", usernames=[updated["username"]], times_att_string=[att_date_time],
                            times_fin_string=[fin_date_time_sql_string], times_sum_date=times_sum_date,
                            overtimes_sum_date=overtimes_sum_date,
                            alltimes_sum_date=alltimes_sum_date, id=id_date)
