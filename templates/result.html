@@ -7,9 +7,6 @@
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <style>
         li { list-style: none;}
-
-
-
     </style>
 
 </head>
@@ -22,9 +19,10 @@
         <a class="nav-link" href="/filter">検索</a>
     </li>
 </ul>
-<table class="table table-striped">
 
+<table class="table table-border table-striped">
 
+    <thead class="">
     <tr>
         <th>名前</th>
         <th>出勤記録</th>
@@ -37,43 +35,25 @@
         <th>合計総労働時間</th>
         {% endif %}
     </tr>
+    </thead>
+
+    {% for i,name,time_att,time_fin,times_sum,overtimes_sum,alltimes_sum in date %}
     <tr>
-        <td>{% for name in usernames %}
-            <li class="list-group-item-action">{{name}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for time_att in times_att_string %}
-            <li class="list-group-item-action">{{time_att}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for time_fin in times_fin_string %}
-            <li class="list-group-item-action">{{time_fin}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for times_sum in times_sum_date %}
-            <li class="list-group-item-action">{{times_sum}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for overtimes_sum in overtimes_sum_date %}
-            <li class="list-group-item-action">{{overtimes_sum}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for alltimes_sum in alltimes_sum_date %}
-            <li class="list-group-item-action">{{alltimes_sum}}</li>
-            {% endfor %}
-        </td>
-        <td>{% for i in id %}
-            <a href="{{ url_for('edit', id=i)  }}">
-                <li class="list-group-item-action">編集
-            </a></li>
-            {% endfor %}
-        </td>
+        <td>{{name}}</td>
+        <td>{{time_att}}</td>
+        <td>{{time_fin}}</td>
+        <td>{{times_sum}}</td>
+        <td>{{overtimes_sum}}</td>
+        <td>{{alltimes_sum}}</td>
+        <td><a href="{{ url_for('edit', id=i)  }}">
+            編集</a></td>
+        {% if sum_alltimes_sum %}
         <td>
             {{sum_alltimes_sum}}
         </td>
-
-
+        {% endif %}
     </tr>
+    {% endfor %}
 </table>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"

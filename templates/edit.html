@@ -14,9 +14,9 @@
         width: 100%;
         border - collapse: collapse;
     }
-
-
     </style>
+
+
 </head>
 <body>
 {% block body %}
@@ -30,9 +30,8 @@
 </ul>
 
 <form action="{{ url_for('edit_update', id=ids) }}" method="POST">
-    <table class="table table-striped">
 
-
+    <table class="table table-striped" >
         <tr>
             <th>名前</th>
             <th>出勤記録</th>
