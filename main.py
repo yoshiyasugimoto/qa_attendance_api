@@ -3,6 +3,7 @@ import os
 
 from flask import session as cook
 import pytz
+from pytz import timezone
 from flask import Flask, render_template, flash
 from sqlalchemy import create_engine, Column, String, Integer, MetaData, DateTime, desc
 from sqlalchemy.ext.declarative import declarative_base
@@ -527,7 +528,8 @@ def edit_update(id):
     fin_date_time = updated["time_fin_time"]
     att_date_time_sql = datetime.datetime.strptime(att_date_time, '%Y-%m-%d_%H:%M')
     att_date_time_string = att_date_time_sql.strftime("%Y-%m-%d_%H:%M:%S")
-    att_date_time_utc = att_date_time_sql - datetime.timedelta(hours=9)
+    att_date_time_jst = pytz.timezone("Asia/Tokyo").localize(att_date_time_sql)
+    att_date_time_utc = att_date_time_jst.astimezone(timezone('UTC'))
     user_id.username = updated["username"]
     user_id.attendance_time = att_date_time_utc
     session.commit()
@@ -536,7 +538,8 @@ def edit_update(id):
     alltimes_sum_date = []
     try:
         fin_date_time_sql = datetime.datetime.strptime(fin_date_time, '%Y-%m-%d_%H:%M')
-        fin_date_time_utc = fin_date_time_sql - datetime.timedelta(hours=9)
+        fin_date_time_jst = pytz.timezone("Asia/Tokyo").localize(fin_date_time_sql)
+        fin_date_time_utc = fin_date_time_jst.astimezone(timezone('UTC'))
         fin_date_time_sql_string = fin_date_time_sql.strftime('%Y-%m-%d_%H:%M:%S')
         d = fin_date_time_sql - att_date_time_sql
         if d >= datetime.timedelta(hours=7):
