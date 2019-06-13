@@ -11,9 +11,9 @@ from flask import request
 from sqlalchemy.pool import NullPool
 from constant_name import PRODUCTION_ENGINE, LOCAL_ENGINE
 
-# engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
+engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
 
-engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
+# engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
 
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
@@ -56,10 +56,6 @@ session.close()
 
 @app.route('/show_entry', methods=["GET"])
 def show_entries():
-    # if not cook.get('logged_in'):
-    #     return render_template('login.html')
-    # else:
-
     session = Session()
     id = session.query(Work_time.id).order_by(desc(Work_time.id)).all()
     id_data = [i for i, in id]
@@ -241,9 +237,6 @@ MAX_WORKING_TIME = 8
 
 @app.route("/filter", methods=['GET', 'POST'])
 def filter():
-    # if not cook.get('logged_in'):
-    #     return render_template('login.html')
-    # else:
     if request.method == "POST":
 
         session = Session()
@@ -492,8 +485,6 @@ def login():
 
 @app.route("/edit/<int:id>", methods=['GET'])
 def edit(id):
-    # if not cook.get('logged_in'):
-    #     return render_template('login.html')
     session = Session()
     ids = session.query(Work_time.id).filter(Work_time.id == id).all()
     ids_date = [ids_dates for ids_dates, in ids]
@@ -520,7 +511,6 @@ def edit(id):
         except AttributeError:
             print(ValueError)
             times_fin_string.append("打刻されていません")
-    # import pdb;pdb.set_trace()
     return render_template("edit.html", ids=ids_date[0], all__name_string=all__name_string,
                            times_att_string=times_att_string,
                            times_fin_string=times_fin_string, )
@@ -538,8 +528,6 @@ def edit_update(id):
     att_date_time_sql = datetime.datetime.strptime(att_date_time, '%Y-%m-%d_%H:%M')
     att_date_time_string = att_date_time_sql.strftime("%Y-%m-%d_%H:%M:%S")
     att_date_time_utc = att_date_time_sql - datetime.timedelta(hours=9)
-    # import pdb;
-    # pdb.set_trace()
     user_id.username = updated["username"]
     user_id.attendance_time = att_date_time_utc
     session.commit()
