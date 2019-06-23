@@ -224,7 +224,6 @@ def filter():
                     working_time = []
                     overworking_time = []
                     total_working_time = []
-
                     for num, i in zip(finish_time_filtered_date, attendance_time_filtered_date):
                         try:
                             time_difference = (
