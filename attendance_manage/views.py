@@ -13,9 +13,9 @@ from flask import request
 from sqlalchemy.pool import NullPool
 from constant_name import PRODUCTION_ENGINE, LOCAL_ENGINE
 
-engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
+# engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
 
-# engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
+engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
 attendance_manage = Blueprint('attendance_manage', __name__,
@@ -199,9 +199,9 @@ def filter():
 
                 elif post_name == '':
                     search_username = [name for name, in
-                                          session.query(WorkTime.username).order_by(desc(WorkTime.id)).filter(
-                                              WorkTime.attendance_time.between(search_start_date_datetime,
-                                                                               search_end_date_datetime)).all()]
+                                       session.query(WorkTime.username).order_by(desc(WorkTime.id)).filter(
+                                           WorkTime.attendance_time.between(search_start_date_datetime,
+                                                                            search_end_date_datetime)).all()]
                     attendance_time_filtered_date = [time for time, in session.query(WorkTime.attendance_time).order_by(
                         desc(WorkTime.id)).filter(
                         WorkTime.attendance_time.between(search_start_date_datetime, search_end_date_datetime)).all()]
@@ -258,10 +258,11 @@ def filter():
                     session.close()
 
                     return render_template("result.html", data=zip(search_id, search_username,
-                                                                   search_attendance_time_string, search_finish_time_string,
+                                                                   search_attendance_time_string,
+                                                                   search_finish_time_string,
                                                                    working_time,
                                                                    overworking_time,
-                                                                   total_working_time,))
+                                                                   total_working_time, ))
             else:
                 flash("検索条件に当てはまるデータがありません")
                 return render_template("confirm.html")

@@ -12,9 +12,9 @@ from flask import request
 from sqlalchemy.pool import NullPool
 from constant_name import PRODUCTION_ENGINE, LOCAL_ENGINE
 
-engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
+# engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
 
-# engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
+engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
 
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
@@ -48,11 +48,24 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 app = Flask(__name__)
+
+# from simple_page import simple_page
+# from attend_manage import attend_manage
+
+
+# app.register_blueprint(simple_page)
+# app.register_blueprint(attend_manage)
+
+
 app.config['JSON_AS_ASCII'] = False  # 日本語文字化け対策
 app.config["JSON_SORT_KEYS"] = False  # ソートをそのまま
 usernames = [name for name, in session.query(User.username)]
 usernames_time = [name for name, in session.query(Work_time.username)]
 session.close()
+
+REST_TIME = 1
+WORKING_TIME = 6
+MAX_WORKING_TIME = 8
 
 
 @app.route('/show_entry', methods=["GET"])
@@ -82,6 +95,7 @@ def show_entries():
             times_fin_asia = (num + timedel).replace(tzinfo=None)
             times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S%z'))
             d = num - i
+
             if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
                 times_sum_date.append(datetime.time(hour=8, minute=0, second=0))
                 overtimes_sum_date.append(d - datetime.timedelta(hours=9))
@@ -107,6 +121,11 @@ def show_entries():
                                                        overtimes_sum_date, alltimes_sum_date))
 
 
+MAX_TICKET = 5
+MINI_TICKET = 0
+QUESTION_COST = 1
+
+
 @app.route('/question', methods=["POST"])
 def question():
     session = Session()
@@ -120,8 +139,8 @@ def question():
     if posted_name in usernames:
         filtered = session.query(User).filter(User.username == posted_name).first()
         filtered_count = filtered.count
-        if 0 < filtered.count < 5:
-            filtered.count -= 1
+        if MINI_TICKET < filtered.count < MAX_TICKET:
+            filtered.count -= QUESTION_COST
             session.commit()
             session.close()
             return "残りの質問回数は" + str(filtered_count) + "回です！"
@@ -129,6 +148,9 @@ def question():
             return '質問回数が不足してます！'
     else:
         return "出勤を記録してください！"
+
+
+FIRST_TICKET = 2
 
 
 @app.route('/create', methods=['POST'])
@@ -141,13 +163,13 @@ def create():
     usernames = [name for name, in session.query(User.username)]
     session.close()
     if created_emp == "emp":
-        newname = User(id=created_id, username=created_name, count=2, attendance=False, is_intern=False)
+        newname = User(id=created_id, username=created_name, count=FIRST_TICKET, attendance=False, is_intern=False)
         session.add(newname)
         session.commit()
         session.close()
         return created_name + "さんを登録しました！"
     elif not created_name in usernames:
-        newname = User(id=created_id, username=created_name, count=2, attendance=False, is_intern=True)
+        newname = User(id=created_id, username=created_name, count=FIRST_TICKET, attendance=False, is_intern=True)
         session.add(newname)
         session.commit()
         session.close()
@@ -155,6 +177,10 @@ def create():
 
     else:
         return "もうメンバーですよ！"
+
+
+FIRST_INTERN_TICKET = 2
+FIRST_EMPLOYEE_TICKET = 3
 
 
 @app.route('/attendance', methods=['POST'])
@@ -175,12 +201,12 @@ def attendance():
         session.commit()
 
         if attended.is_intern == True:
-            attended.count = 2
+            attended.count = FIRST_INTERN_TICKET
             session.commit()
             session.close()
 
         else:
-            attended.count = 3
+            attended.count = FIRST_EMPLOYEE_TICKET
             session.commit()
             session.close()
         return post_name + "さんの出勤を記録しました！"
@@ -214,6 +240,9 @@ def leave():
         return "出勤した記録がないですよ！"
 
 
+HOURLY_TICKET_ADDITION = 2
+
+
 @app.route("/counter")
 def add_question():
     session = Session()
@@ -221,19 +250,14 @@ def add_question():
 
     for i in users:
         if i.count < 4:
-            i.count += 2
+            i.count += HOURLY_TICKET_ADDITION
             session.commit()
         else:
-            i.count = 5
+            i.count = MAX_TICKET
             session.commit()
 
     session.close()
     return "Success"
-
-
-REST_TIME = 1
-WORKING_TIME = 6
-MAX_WORKING_TIME = 8
 
 
 @app.route("/filter", methods=['GET', 'POST'])
@@ -367,15 +391,18 @@ def filter():
                             times_fin_asia = (num + timedel).replace(tzinfo=None)
                             times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S%z'))
                             d = num - i
-                            if num - i >= datetime.timedelta(hours=7):
-                                if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
-                                    times_sum_date.append(datetime.timedelta(hours=8))
-                                    overtimes_sum_date.append(d - datetime.timedelta(hours=9))
-                                    alltimes_sum_date.append(d - datetime.timedelta(hours=1))
+                            if num - i >= datetime.timedelta(hours=REST_TIME + WORKING_TIME):
+                                if d - datetime.timedelta(hours=REST_TIME) >= datetime.timedelta(
+                                        hours=MAX_WORKING_TIME):
+                                    times_sum_date.append(datetime.timedelta(hours=MAX_WORKING_TIME))
+                                    overtimes_sum_date.append(
+                                        d - datetime.timedelta(hours=MAX_WORKING_TIME + REST_TIME))
+                                    alltimes_sum_date.append(d - datetime.timedelta(hours=REST_TIME))
 
-                            elif datetime.timedelta(hours=6) <= num - i < datetime.timedelta(hours=7):
-                                times_sum_date.append(datetime.timedelta(hours=6))
-                                alltimes_sum_date.append(datetime.timedelta(hours=6))
+                            elif datetime.timedelta(hours=WORKING_TIME) <= num - i < datetime.timedelta(
+                                    hours=WORKING_TIME + REST_TIME):
+                                times_sum_date.append(datetime.timedelta(hours=WORKING_TIME))
+                                alltimes_sum_date.append(datetime.timedelta(hours=WORKING_TIME))
                                 overtimes_sum_date.append("残業なし")
                             else:
                                 times_sum_date.append((num - i))
@@ -436,15 +463,16 @@ def filter():
                         times_fin_asia = (num + timedel).replace(tzinfo=None)
                         times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S%z'))
                         d = num - i
-                        if num - i >= datetime.timedelta(hours=7):
-                            if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
-                                times_sum_date.append(datetime.timedelta(hours=8))
-                                overtimes_sum_date.append(d - datetime.timedelta(hours=9))
-                                alltimes_sum_date.append(d - datetime.timedelta(hours=1))
+                        if num - i >= datetime.timedelta(hours=WORKING_TIME + REST_TIME):
+                            if d - datetime.timedelta(hours=REST_TIME) >= datetime.timedelta(hours=MAX_WORKING_TIME):
+                                times_sum_date.append(datetime.timedelta(hours=MAX_WORKING_TIME))
+                                overtimes_sum_date.append(d - datetime.timedelta(hours=MAX_WORKING_TIME + REST_TIME))
+                                alltimes_sum_date.append(d - datetime.timedelta(hours=REST_TIME))
 
-                        elif datetime.timedelta(hours=6) <= num - i < datetime.timedelta(hours=7):
-                            times_sum_date.append(datetime.timedelta(hours=6))
-                            alltimes_sum_date.append(datetime.timedelta(hours=6))
+                        elif datetime.timedelta(hours=WORKING_TIME) <= num - i < datetime.timedelta(
+                                hours=WORKING_TIME + REST_TIME):
+                            times_sum_date.append(datetime.timedelta(hours=WORKING_TIME))
+                            alltimes_sum_date.append(datetime.timedelta(hours=WORKING_TIME))
                             overtimes_sum_date.append("残業なし")
                         else:
                             times_sum_date.append((num - i))
@@ -536,20 +564,21 @@ def edit_update(id):
     times_sum_date = []
     overtimes_sum_date = []
     alltimes_sum_date = []
+
     try:
         fin_date_time_sql = datetime.datetime.strptime(fin_date_time, '%Y-%m-%d_%H:%M')
         fin_date_time_jst = pytz.timezone("Asia/Tokyo").localize(fin_date_time_sql)
         fin_date_time_utc = fin_date_time_jst.astimezone(timezone('UTC'))
         fin_date_time_sql_string = fin_date_time_sql.strftime('%Y-%m-%d_%H:%M:%S')
         d = fin_date_time_sql - att_date_time_sql
-        if d >= datetime.timedelta(hours=7):
-            if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
-                times_sum_date.append(datetime.timedelta(hours=8))
-                overtimes_sum_date.append(d - datetime.timedelta(hours=9))
-                alltimes_sum_date.append(d - datetime.timedelta(hours=1))
-        elif datetime.timedelta(hours=6) <= d < datetime.timedelta(hours=7):
-            times_sum_date.append(datetime.timedelta(hours=6))
-            alltimes_sum_date.append(datetime.timedelta(hours=6))
+        if d >= datetime.timedelta(hours=REST_TIME + WORKING_TIME):
+            if d - datetime.timedelta(hours=REST_TIME) >= datetime.timedelta(hours=MAX_WORKING_TIME):
+                times_sum_date.append(datetime.timedelta(hours=MAX_WORKING_TIME))
+                overtimes_sum_date.append(d - datetime.timedelta(hours=MAX_WORKING_TIME + REST_TIME))
+                alltimes_sum_date.append(d - datetime.timedelta(hours=REST_TIME))
+        elif datetime.timedelta(hours=WORKING_TIME) <= d < datetime.timedelta(hours=REST_TIME + WORKING_TIME):
+            times_sum_date.append(datetime.timedelta(hours=WORKING_TIME))
+            alltimes_sum_date.append(datetime.timedelta(hours=WORKING_TIME))
             overtimes_sum_date.append("残業なし")
         else:
             times_sum_date.append(d)

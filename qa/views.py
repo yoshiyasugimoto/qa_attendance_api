@@ -7,8 +7,8 @@ from sqlalchemy.pool import NullPool
 from attendance_manage.views import WorkTime
 from constant_name import PRODUCTION_ENGINE, LOCAL_ENGINE
 
-engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
-# engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
+# engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
+engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
 qa = Blueprint('qa', __name__)
@@ -51,7 +51,7 @@ def question():
     post_name = post['text']
     post_name = post_name.strip("@")
     if post_name[-1:] in " ":
-        posted_name = post_name.strip(" ")
+        post_name = post_name.strip(" ")
     session.close()
     if post_name in qa_ticket_username:
         filtered_name = session.query(User).filter(User.username == post_name).first()
