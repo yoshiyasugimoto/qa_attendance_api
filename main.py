@@ -12,9 +12,9 @@ from flask import request
 from sqlalchemy.pool import NullPool
 from constant_name import PRODUCTION_ENGINE, LOCAL_ENGINE
 
-# engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
+engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
 
-engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
+# engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
 
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
