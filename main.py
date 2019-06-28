@@ -12,9 +12,9 @@ from flask import request
 from sqlalchemy.pool import NullPool
 from constant_name import PRODUCTION_ENGINE, LOCAL_ENGINE
 
-engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
+# engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
 
-# engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
+engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
 
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
@@ -82,20 +82,20 @@ def show_entries():
             times_fin_asia = (num + timedel).replace(tzinfo=None)
             times_fin_string.append(times_fin_asia.strftime('%Y-%m-%d_%H:%M:%S%z'))
             d = num - i
-            if d >= datetime.timedelta(hours=7):
-                if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
-                    times_sum_date.append(datetime.time(hour=8, minute=0, second=0))
-                    overtimes_sum_date.append(d - datetime.timedelta(hours=9))
-                    alltimes_sum_date.append(d - datetime.timedelta(hours=1))
+            if d - datetime.timedelta(hours=1) >= datetime.timedelta(hours=8):
+                times_sum_date.append(datetime.time(hour=8, minute=0, second=0))
+                overtimes_sum_date.append(d - datetime.timedelta(hours=9))
+                alltimes_sum_date.append(d - datetime.timedelta(hours=1))
 
             elif datetime.timedelta(hours=6) <= d < datetime.timedelta(hours=7):
-                times_sum_date.append(datetime.time(hour=6, minute=0, second=0))
                 alltimes_sum_date.append(datetime.time(hour=6, minute=0, second=0))
+                times_sum_date.append(datetime.time(hour=6, minute=0, second=0))
                 overtimes_sum_date.append("残業なし")
+
             else:
                 times_sum_date.append(d)
-                alltimes_sum_date.append(d)
                 overtimes_sum_date.append("残業なし")
+                alltimes_sum_date.append(d)
 
         except:
             times_fin_string.append("打刻されていません")
