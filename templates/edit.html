@@ -40,15 +40,15 @@
         </tr>
         <tr>
             <td>{% for edit_name in edit_username %}
-                <p><label>ユーザー名 <input type="text" name="username" value={{name}}></label></p>
+                <p><label>ユーザー名 <input type="text" name="edit_name" value={{edit_name}}></label></p>
                 {% endfor %}
             </td>
             <td>{% for attendance_time in attendance_time_string %}
-                <p><label>出勤時間 <input type="text" name="time_att_time" step="1" value={{time_att}}></label></p>
+                <p><label>出勤時間 <input type="text" name="attendance_time" step="1" value={{attendance_time}}></label></p>
                 {% endfor %}
             </td>
             <td>{% for finish_time in finish_time_string %}
-                <p><label>退勤時間 <input type="text" name="time_fin_time" step="1" value={{time_fin}}></label></p>
+                <p><label>退勤時間 <input type="text" name="finish_time" step="1" value={{finish_time}}></label></p>
                 {% endfor %}
             </td>
         </tr>
