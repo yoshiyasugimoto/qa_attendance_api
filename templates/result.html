@@ -37,15 +37,15 @@
     </tr>
     </thead>
 
-    {% for id,username,attendance_time,finish_time,working_time,overworking_time,total_working_time in data %}
+    {% for data in context %}
     <tr>
-        <td>{{username}}</td>
-        <td>{{attendance_time}}</td>
-        <td>{{finish_time}}</td>
-        <td>{{working_time}}</td>
-        <td>{{overworking_time}}</td>
-        <td>{{total_working_time}}</td>
-        <td><a href="{{ url_for('.edit', id=id)  }}">
+        <td>{{data.username}}</td>
+        <td>{{data.attendance_time}}</td>
+        <td>{{data.finish_time}}</td>
+        <td>{{data.working_time}}</td>
+        <td>{{data.overworking_time}}</td>
+        <td>{{data.total_working_time}}</td>
+        <td><a href="{{ url_for('.edit', id=data.id)  }}">
             編集</a></td>
         {% if sum_total_working_time %}
         <td>

@@ -13,10 +13,11 @@
         width: 100%;
         border - collapse: collapse;
     }
+
+
     </style>
 </head>
 <body>
-
 <form class="form-inline" action="/filter" method="POST">
     <a href="{{ url_for('.filter')  }}">
         <button type="button" class="btn btn-outline-primary btn-lg">検索画面へ</button>
@@ -26,29 +27,28 @@
 <table class="table table-border table-striped ">
     <thead class="">
     <tr>
-        <th >名前</th>
-        <th >出勤記録</th>
-        <th >退勤記録</th>
-        <th >就業時間</th>
-        <th >残業時間</th>
-        <th >総労働時間</th>
-        <th >編集</th>
+        <th>名前</th>
+        <th>出勤記録</th>
+        <th>退勤記録</th>
+        <th>就業時間</th>
+        <th>残業時間</th>
+        <th>総労働時間</th>
+        <th>編集</th>
     </tr>
     </thead>
 
-    {% for id,username,attendance_time,finish_time,working_time,overworking_time,total_working_time in data %}
+    {% for data in context %}
     <tr>
-        <td>{{username}}</td>
-        <td>{{attendance_time}}</td>
-        <td>{{finish_time}}</td>
-        <td>{{working_time}}</td>
-        <td>{{overworking_time}}</td>
-        <td>{{total_working_time}}</td>
-        <td><a href="{{ url_for('.edit', id=id)  }}">
+        <td>{{data.username}}</td>
+        <td>{{data.attendance_time}}</td>
+        <td>{{data.finish_time}}</td>
+        <td>{{data.working_time}}</td>
+        <td>{{data.overworking_time}}</td>
+        <td>{{data.total_working_time}}</td>
+        <td><a href="{{ url_for('.edit', id=data.id)  }}">
             編集</a></td>
     </tr>
     {% endfor %}
-
 </table>
 </body>
 </html>
