@@ -5,17 +5,19 @@ from flask import session as cook
 import pytz
 from pytz import timezone
 from flask import render_template, flash, request
+import sys
 from sqlalchemy import create_engine, Column, String, Integer, MetaData, DateTime, desc
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from constant_name import PRODUCTION_ENGINE, LOCAL_ENGINE
 
-'''本番環境エンジン'''
-# engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
-
-'''ローカルエンジン'''
-engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
+if 'test' in sys.argv:
+    '''ローカルエンジン'''
+    engine = create_engine(LOCAL_ENGINE, poolclass=NullPool)
+else:
+    '''本番環境エンジン'''
+    engine = create_engine(PRODUCTION_ENGINE, poolclass=NullPool)
 
 meta = MetaData(engine, reflect=True)
 Base = declarative_base()
@@ -177,15 +179,6 @@ def filter():
 
     else:
         return render_template("confirm.html")
-
-
-'''検索する名前の整形'''
-
-
-def search_username(username, session):
-    return [name for name, in session.query(WorkTime.username).filter(
-        WorkTime.username == username).order_by(
-        desc(WorkTime.id)).all()]
 
 
 '''検索する時間の整形'''
