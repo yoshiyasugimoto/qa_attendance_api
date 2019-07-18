@@ -1,4 +1,4 @@
-from main import User
+from qa.views import User
 from sqlalchemy import create_engine, Column, String, Integer, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker

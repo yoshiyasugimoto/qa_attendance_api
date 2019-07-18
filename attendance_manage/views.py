@@ -53,15 +53,21 @@ MAX_WORKING_TIME = 8
 def show_entries():
     session = Session()
     all_record = session.query(WorkTime).order_by(desc(WorkTime.id)).all()
-    context = data_send_html(all_record)
+    context, sum_total_working_time = data_send_html(all_record)
+    session.close()
     return render_template("show_entry.html", context=context)
 
 
 def data_send_html(all_record):
+    sum_total_working_data = timedelta(0)
     context = []
     for row in all_record:
         finish_time_string, overworking_time, total_working_time, working_time = work_time_data(row.attendance_time,
                                                                                                 row.finish_time)
+        try:
+            sum_total_working_data += total_working_time
+        except:
+            pass
         sample_dict = {
             "id": row.id,
             "username": row.username,
@@ -70,8 +76,9 @@ def data_send_html(all_record):
             "working_time": working_time,
             "overworking_time": overworking_time,
             "total_working_time": total_working_time}
+
         context.append(sample_dict)
-    return context
+    return context, sum_total_working_data
 
 
 '''退勤、残業総労働時間の生成'''
@@ -132,7 +139,6 @@ def caluc_attendance_time(attendance_time):
 @attendance_manage.route("/filter", methods=['GET', 'POST'])
 def filter():
     if request.method == "POST":
-        sum_total_working_time = 0
         session = Session()
         username = request.form["username"]
         start_time = request.form["search_start"]
@@ -140,7 +146,7 @@ def filter():
 
         filtered_username_record = session.query(WorkTime).filter(WorkTime.username == username).order_by(
             desc(WorkTime.id)).all()
-        filtered_username_context = data_send_html(filtered_username_record)
+        filtered_username_context, sum_total_working_time = data_send_html(filtered_username_record)
 
         try:
             search_end_datetime, search_start_datetime = calcu_search_time(start_time, end_time)
@@ -155,7 +161,7 @@ def filter():
                     WorkTime.attendance_time.between(search_start_datetime, search_end_datetime)).filter(
                     WorkTime.username == username).all()
 
-                filtered_username_time_context = data_send_html(filtered_username_time_record)
+                filtered_username_time_context, sum_total_working_time = data_send_html(filtered_username_time_record)
 
                 return render_template("result.html", context=filtered_username_time_context,
                                        sum_total_working_time=sum_total_working_time)
@@ -165,7 +171,7 @@ def filter():
                 filtered_time_record = session.query(WorkTime).order_by(desc(WorkTime.id)).filter(
                     WorkTime.attendance_time.between(search_start_datetime, search_end_datetime)).all()
 
-                filtered_time_context = data_send_html(filtered_time_record)
+                filtered_time_context, sum_total_working_time = data_send_html(filtered_time_record)
 
                 return render_template("result.html", context=filtered_time_context)
 
@@ -215,7 +221,7 @@ def login():
 def edit(id):
     session = Session()
     edit_record = session.query(WorkTime).filter(WorkTime.id == id).all()
-    edit_context = data_send_html(edit_record)
+    edit_context, sum_total_working_time = data_send_html(edit_record)
 
     return render_template("edit.html", context=edit_context)
 

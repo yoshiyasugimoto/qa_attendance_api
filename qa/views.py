@@ -13,9 +13,6 @@ meta = MetaData(engine, reflect=True)
 Base = declarative_base()
 qa = Blueprint('qa', __name__)
 
-REST_TIME = 1
-WORKING_TIME = 6
-MAX_WORKING_TIME = 8
 MAX_TICKET = 5
 MINI_TICKET = 0
 QUESTION_COST = 1
