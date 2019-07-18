@@ -49,7 +49,6 @@ def question():
     post_name = post_name.strip("@")
     if post_name[-1:] in " ":
         post_name = post_name.strip(" ")
-    session.close()
     if post_name in qa_ticket_username:
         filtered_name = session.query(User).filter(User.username == post_name).first()
         filtered_name_count = filtered_name.count
@@ -71,7 +70,6 @@ def create():
     created_name = created["user_name"]
     created_id = created["user_id"]
     created_employee = created["text"]
-    session.close()
     if created_employee == "emp":
         new_name = User(id=created_id, username=created_name, count=FIRST_TICKET, attendance=False, is_intern=False)
         session.add(new_name)
@@ -86,6 +84,7 @@ def create():
         return created_name + "さんを登録しました！"
 
     else:
+        session.close()
         return "もうメンバーですよ！"
 
 
@@ -101,19 +100,19 @@ def attendance():
     elif post_name in qa_ticket_username:
         filtered_name = session.query(User).filter(User.username == post_name).first()
         filtered_name.attendance = True
-        filtered_name_time = WorkTime(user_id=attendance_id, username=post_name, attendance_time=datetime.datetime.now())
+        filtered_name_time = WorkTime(user_id=attendance_id, username=post_name,
+                                      attendance_time=datetime.datetime.now())
         session.add(filtered_name_time)
         session.commit()
 
         if filtered_name.is_intern == True:
             filtered_name.count = FIRST_INTERN_TICKET
             session.commit()
-            session.close()
 
         else:
             filtered_name.count = FIRST_EMPLOYEE_TICKET
             session.commit()
-            session.close()
+        session.close()
         return post_name + "さんの出勤を記録しました！"
     else:
         session.close()
@@ -127,7 +126,6 @@ def leave():
     post_name = post["user_name"]
 
     if post_name in qa_ticket_username:
-        session = Session()
         leaving_work = session.query(User).filter(User.username == post_name).first()
 
         leaving_work.attendance = False
@@ -135,7 +133,6 @@ def leave():
             desc(WorkTime.id)).first()
 
         leaving_time_order.finish_time = datetime.datetime.now()
-
         session.commit()
         session.close()
         return post_name + "さん,今日もお疲れ様でした!"
