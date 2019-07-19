@@ -1,5 +1,0 @@
-cron:
-- description: add question counter
-  url: /counter
-  schedule: every 24 hours
-  timezone: Asia/Tokyo

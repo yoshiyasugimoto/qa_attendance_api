@@ -16,16 +16,6 @@ slackのSlash Commandsと結びつけることでslackによる勤怠の打刻�
 
 ## Requirement
 requirements.in参照
-## Deploy
-デプロイ用コマンド
-gcloud config set project mlab-apps
-gcloud app deploy app.yaml
-
-アプリ起動コマンド
-ローカル環境
-python app.py test
-本番環境
-python app.py
 
 
 

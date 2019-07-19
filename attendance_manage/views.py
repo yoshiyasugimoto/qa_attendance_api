@@ -64,14 +64,16 @@ def data_send_html(all_record):
     for row in all_record:
         finish_time_string, overworking_time, total_working_time, working_time = work_time_data(row.attendance_time,
                                                                                                 row.finish_time)
-        try:
+
+        if total_working_time:
             sum_total_working_data += total_working_time
-        except:
-            pass
+        else:
+            continue
+
         sample_dict = {
             "id": row.id,
             "username": row.username,
-            "attendance_time": caluc_attendance_time(row.attendance_time),
+            "attendance_time": calc_attendance_time(row.attendance_time),
             "finish_time": finish_time_string,
             "working_time": working_time,
             "overworking_time": overworking_time,
@@ -121,7 +123,7 @@ def calcu_jst_time(_time):
 '''出勤時間の整形'''
 
 
-def caluc_attendance_time(attendance_time):
+def calc_attendance_time(attendance_time):
     try:
         attendance_timezone_jst = calcu_jst_time(attendance_time)
         attendance_time_string = attendance_timezone_jst.strftime("%Y-%m-%d_%H:%M%z")
@@ -143,7 +145,6 @@ def filter():
         username = request.form["username"]
         start_time = request.form["search_start"]
         end_time = request.form["search_end"]
-
         filtered_username_record = session.query(WorkTime).filter(WorkTime.username == username).order_by(
             desc(WorkTime.id)).all()
         filtered_username_context, sum_total_working_time = data_send_html(filtered_username_record)
@@ -162,7 +163,6 @@ def filter():
                     WorkTime.username == username).all()
 
                 filtered_username_time_context, sum_total_working_time = data_send_html(filtered_username_time_record)
-
                 return render_template("result.html", context=filtered_username_time_context,
                                        sum_total_working_time=sum_total_working_time)
 
@@ -222,7 +222,7 @@ def edit(id):
     session = Session()
     edit_record = session.query(WorkTime).filter(WorkTime.id == id).all()
     edit_context, sum_total_working_time = data_send_html(edit_record)
-
+    session.close()
     return render_template("edit.html", context=edit_context)
 
 
@@ -234,7 +234,7 @@ def edit_update(id):
     session = Session()
     edit_attendance = request.form["attendance_time"]
     edit_finish = request.form["finish_time"]
-    attendance_timezone_utc, finish_timezone_utc = caluc_work_data(edit_attendance, edit_finish)
+    attendance_timezone_utc, finish_timezone_utc = calc_work_data(edit_attendance, edit_finish)
     edit_data = session.query(WorkTime).filter(WorkTime.id == id).first()
     edit_data.username = request.form["edit_name"]
     edit_data.attendance_time = attendance_timezone_utc
@@ -248,10 +248,10 @@ def edit_update(id):
 '''就業時間、残業時間、合計労働時間の計算'''
 
 
-def caluc_work_data(edit_attendance, edit_finish):
+def calc_work_data(edit_attendance, edit_finish):
     try:
-        attendance_timezone_utc = caluc_edit_time(edit_attendance)
-        finish_timezone_utc = caluc_edit_time(edit_finish)
+        attendance_timezone_utc = calc_edit_time(edit_attendance)
+        finish_timezone_utc = calc_edit_time(edit_finish)
     except:
         attendance_timezone_utc = None
         finish_timezone_utc = None
@@ -262,7 +262,7 @@ def caluc_work_data(edit_attendance, edit_finish):
 '''編集する出退勤時間の計算'''
 
 
-def caluc_edit_time(edit_time):
+def calc_edit_time(edit_time):
     try:
         edit_datetime = datetime.strptime(edit_time, '%Y-%m-%d_%H:%M')
     except:
@@ -270,3 +270,4 @@ def caluc_edit_time(edit_time):
     timezone_utc = pytz.timezone("Asia/Tokyo").localize(edit_datetime).astimezone(timezone('UTC'))
 
     return timezone_utc
+
