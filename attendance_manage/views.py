@@ -125,8 +125,7 @@ def calc_jst_time(_time):
 
 def calc_attendance_time(attendance_time):
     try:
-        attendance_timezone_jst = calc_jst_time(attendance_time)
-        attendance_time_string = attendance_timezone_jst.strftime("%Y-%m-%d_%H:%M%z")
+        attendance_time_string = calc_jst_time(attendance_time).strftime("%Y-%m-%d_%H:%M%z")
 
         return attendance_time_string
     except:

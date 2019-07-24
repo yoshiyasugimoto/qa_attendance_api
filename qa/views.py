@@ -42,7 +42,6 @@ class User(Base):
 
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
-session = Session()
 
 
 @qa.route('/question', methods=["POST"])
@@ -110,15 +109,15 @@ def attendance():
         filtered_name_time = WorkTime(user_id=attendance_id, username=post_name,
                                       attendance_time=datetime.datetime.now())
         session.add(filtered_name_time)
-        session.commit()
 
         if filtered_name_record.is_intern == True:
             filtered_name_record.count = FIRST_INTERN_TICKET
-            session.commit()
+
 
         else:
             filtered_name_record.count = FIRST_EMPLOYEE_TICKET
-            session.commit()
+
+        session.commit()
         session.close()
         return post_name + "さんの出勤を記録しました！"
     else:
@@ -160,10 +159,9 @@ def add_question():
     for row in add_question_user_record:
         if row.count < 4:
             row.count += HOURLY_TICKET_ADDITION
-            session.commit()
         else:
             row.count = MAX_TICKET
-            session.commit()
 
+    session.commit()
     session.close()
     return "Success"
