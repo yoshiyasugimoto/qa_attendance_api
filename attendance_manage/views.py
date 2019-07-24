@@ -36,9 +36,7 @@ class WorkTime(Base):
 
 
 Base.metadata.create_all(engine)
-
 Session = sessionmaker(bind=engine)
-session = Session()
 attendance_manage = Blueprint('attendance_manage', __name__,
                               template_folder='templates')
 
@@ -126,11 +124,9 @@ def calc_jst_time(_time):
 def calc_attendance_time(attendance_time):
     try:
         attendance_time_string = calc_jst_time(attendance_time).strftime("%Y-%m-%d_%H:%M%z")
-
         return attendance_time_string
     except:
         attendance_time_string = "打刻されていません"
-
         return attendance_time_string
 
 
@@ -149,7 +145,6 @@ def filter():
         filtered_username_context, sum_total_working_time = data_send_html(filtered_username_record)
 
         try:
-
             search_start_datetime = exchange_timezone(start_time)
             search_end_datetime = exchange_timezone(end_time)
             filtered_time_record = session.query(WorkTime).order_by(desc(WorkTime.id)).filter(
@@ -269,6 +264,3 @@ def calc_edit_time(edit_time):
     timezone_utc = pytz.timezone("Asia/Tokyo").localize(edit_datetime).astimezone(timezone('UTC'))
 
     return timezone_utc
-
-
-

@@ -27,6 +27,9 @@ FIRST_TICKET = 2
 FIRST_INTERN_TICKET = 2
 FIRST_EMPLOYEE_TICKET = 3
 
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+
 
 class User(Base):
     __tablename__ = 'qa_ticket'
@@ -38,10 +41,6 @@ class User(Base):
 
     def __repr__(self):
         return '<User username={username} count={count}>'.format(username=self.username, count=self.count)
-
-
-Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
 
 
 @qa.route('/question', methods=["POST"])
@@ -81,7 +80,6 @@ def create():
         new_username = User(id=request.form["user_id"], username=request.form["user_name"], count=FIRST_TICKET,
                             attendance=False, is_intern=True)
         return create_user(new_username, session)
-
     else:
         session.close()
         return "もうメンバーですよ！"
@@ -134,7 +132,6 @@ def leave():
 
     if post_name in qa_ticket_username_list:
         leaving_work_record = session.query(User).filter(User.username == post_name).first()
-
         leaving_work_record.attendance = False
         leaving_time_order_record = session.query(WorkTime).filter(WorkTime.username == post_name).order_by(
             desc(WorkTime.id)).first()
