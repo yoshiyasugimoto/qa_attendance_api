@@ -65,10 +65,10 @@ def data_send_html(all_record):
         finish_time_string, overworking_time, total_working_time, working_time = work_time_data(row.attendance_time,
                                                                                                 row.finish_time)
 
-        if total_working_time:
+        try:
             sum_total_working_data += total_working_time
-        else:
-            continue
+        except:
+            pass
 
         sample_dict = {
             "id": row.id,
@@ -88,7 +88,7 @@ def data_send_html(all_record):
 
 def work_time_data(attendance_time, finish_time):
     try:
-        finish_timezone_jst = calcu_jst_time(finish_time)
+        finish_timezone_jst = calc_jst_time(finish_time)
         finish_time_string = finish_timezone_jst.strftime('%Y-%m-%d_%H:%M%z')
         total_time = finish_time - attendance_time
         if total_time >= timedelta(hours=REST_TIME + MAX_WORKING_TIME):
@@ -116,7 +116,7 @@ def work_time_data(attendance_time, finish_time):
 '''出退勤時間を整形する'''
 
 
-def calcu_jst_time(_time):
+def calc_jst_time(_time):
     return pytz.timezone("UTC").localize(_time).astimezone(pytz.timezone("Asia/Tokyo")).replace(tzinfo=None)
 
 
@@ -125,7 +125,7 @@ def calcu_jst_time(_time):
 
 def calc_attendance_time(attendance_time):
     try:
-        attendance_timezone_jst = calcu_jst_time(attendance_time)
+        attendance_timezone_jst = calc_jst_time(attendance_time)
         attendance_time_string = attendance_timezone_jst.strftime("%Y-%m-%d_%H:%M%z")
 
         return attendance_time_string
@@ -150,7 +150,11 @@ def filter():
         filtered_username_context, sum_total_working_time = data_send_html(filtered_username_record)
 
         try:
-            search_end_datetime, search_start_datetime = calcu_search_time(start_time, end_time)
+
+            search_start_datetime = exchange_timezone(start_time)
+            search_end_datetime = exchange_timezone(end_time)
+            filtered_time_record = session.query(WorkTime).order_by(desc(WorkTime.id)).filter(
+                WorkTime.attendance_time.between(search_start_datetime, search_end_datetime))
 
             '''名前$時間検索'''
             if filtered_username_context:
@@ -158,22 +162,22 @@ def filter():
                     flash("検索条件に当てはまるデータがありません")
                     return render_template("confirm.html")
 
-                filtered_username_time_record = session.query(WorkTime).order_by(desc(WorkTime.id)).filter(
-                    WorkTime.attendance_time.between(search_start_datetime, search_end_datetime)).filter(
+                filtered_username_time_record = filtered_time_record.filter(
                     WorkTime.username == username).all()
 
                 filtered_username_time_context, sum_total_working_time = data_send_html(filtered_username_time_record)
+
                 return render_template("result.html", context=filtered_username_time_context,
                                        sum_total_working_time=sum_total_working_time)
 
                 '''時間のみ検索'''
             elif username == '':
-                filtered_time_record = session.query(WorkTime).order_by(desc(WorkTime.id)).filter(
-                    WorkTime.attendance_time.between(search_start_datetime, search_end_datetime)).all()
-
-                filtered_time_context, sum_total_working_time = data_send_html(filtered_time_record)
+                filtered_time_context, sum_total_working_time = data_send_html(filtered_time_record.all())
 
                 return render_template("result.html", context=filtered_time_context)
+            else:
+                flash("検索条件に当てはまるデータがありません")
+                return render_template("confirm.html")
 
             '''名前のみ検索'''
         except:
@@ -190,14 +194,10 @@ def filter():
 '''検索する時間の整形'''
 
 
-def calcu_search_time(start_time, end_time):
-    search_start_datetimes = datetime.strptime(start_time, "%Y-%m-%d_%H:%M:%S")
-    search_start_datetime = pytz.timezone("Asia/Tokyo").localize(search_start_datetimes).astimezone(
+def exchange_timezone(start_time: str) -> datetime:
+    result = pytz.timezone("Asia/Tokyo").localize(datetime.strptime(start_time, "%Y-%m-%d_%H:%M:%S")).astimezone(
         pytz.timezone("UTC")).replace(tzinfo=None)
-    search_end_datetimes = datetime.strptime(end_time, "%Y-%m-%d_%H:%M:%S")
-    search_end_datetime = pytz.timezone("Asia/Tokyo").localize(search_end_datetimes).astimezone(
-        pytz.timezone("UTC")).replace(tzinfo=None)
-    return search_end_datetime, search_start_datetime
+    return result
 
 
 '''ログイン画面'''
@@ -270,4 +270,6 @@ def calc_edit_time(edit_time):
     timezone_utc = pytz.timezone("Asia/Tokyo").localize(edit_datetime).astimezone(timezone('UTC'))
 
     return timezone_utc
+
+
 
