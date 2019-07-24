@@ -124,10 +124,9 @@ def calc_jst_time(_time):
 def calc_attendance_time(attendance_time):
     try:
         attendance_time_string = calc_jst_time(attendance_time).strftime("%Y-%m-%d_%H:%M%z")
-        return attendance_time_string
     except:
         attendance_time_string = "打刻されていません"
-        return attendance_time_string
+    return attendance_time_string
 
 
 '''検索機能'''
@@ -264,3 +263,4 @@ def calc_edit_time(edit_time):
     timezone_utc = pytz.timezone("Asia/Tokyo").localize(edit_datetime).astimezone(timezone('UTC'))
 
     return timezone_utc
+

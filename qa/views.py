@@ -110,8 +110,6 @@ def attendance():
 
         if filtered_name_record.is_intern == True:
             filtered_name_record.count = FIRST_INTERN_TICKET
-
-
         else:
             filtered_name_record.count = FIRST_EMPLOYEE_TICKET
 
