@@ -19,49 +19,36 @@
 </head>
 <body>
 <form class="form-inline" action="/filter" method="POST">
-    <a href="{{ url_for('filter')  }}">
+    <a href="{{ url_for('.filter')  }}">
         <button type="button" class="btn btn-outline-primary btn-lg">検索画面へ</button>
     </a>
 </form>
 
 <table class="table table-border table-striped ">
-
     <thead class="">
-
     <tr>
-        <th scope="col">名前</th>
-        <th scope="col">出勤記録</th>
-        <th scope="col">退勤記録</th>
-        <th scope="col">就業時間</th>
-        <th scope="col">残業時間</th>
-        <th scope="col">総労働時間</th>
-        <th scope="col">編集</th>
+        <th>名前</th>
+        <th>出勤記録</th>
+        <th>退勤記録</th>
+        <th>就業時間</th>
+        <th>残業時間</th>
+        <th>総労働時間</th>
+        <th>編集</th>
     </tr>
     </thead>
 
-    {% for i,name,time_att,time_fin,times_sum,overtimes_sum,alltimes_sum in date %}
+    {% for data in context %}
     <tr>
-        <td>{{name}}</td>
-        <td>{{time_att}}</td>
-        <td>{{time_fin}}</td>
-        <td>{{times_sum}}</td>
-        <td>{{overtimes_sum}}</td>
-        <td>{{alltimes_sum}}</td>
-        <td><a href="{{ url_for('edit', id=i)  }}">
+        <td>{{data.username}}</td>
+        <td>{{data.attendance_time}}</td>
+        <td>{{data.finish_time}}</td>
+        <td>{{data.working_time}}</td>
+        <td>{{data.overworking_time}}</td>
+        <td>{{data.total_working_time}}</td>
+        <td><a href="{{ url_for('.edit', id=data.id)  }}">
             編集</a></td>
     </tr>
     {% endfor %}
-
 </table>
-
 </body>
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-        crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
 </html>
